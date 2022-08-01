@@ -5,7 +5,7 @@ const{getUserDetails,registerUser,login,updateUser}=require("../controllers/user
 const {productCreate,getProductByParam,getProduct,updateProduct,deleteProduct}=require("../controllers/productController")
 const{productaValid}=require("../validator/productValidator")
 const {createCart,updateCart,getCart,deleteCart}=require("../controllers/cartController")
-
+const {createOrder,updateOrder}=require("../controllers/orederController")
 
 
 router.get("/user/:userId/profile",authetication,getUserDetails)
@@ -33,5 +33,10 @@ router.put("/users/:userId/cart",authetication,authorisation,updateCart)
 router.get("/users/:userId/cart",authetication,authorisation,getCart)
 
 router.delete("/users/:userId/cart",authetication,authorisation,deleteCart)
+
+router.post("/users/:userId/orders",authetication,authorisation,createOrder)
+
+router.put("/users/:userId/orders",authetication,authorisation,updateOrder)
+
 
 module.exports= router
