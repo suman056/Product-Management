@@ -4,7 +4,7 @@ const {authetication,authorisation}=require("../middleware/auth")
 const{getUserDetails,registerUser,login,updateUser}=require("../controllers/userController")
 const {productCreate,getProductByParam,getProduct,updateProduct,deleteProduct}=require("../controllers/productController")
 const{productaValid}=require("../validator/productValidator")
-const {createCart}=require("../controllers/cartController")
+const {createCart,updateCart,getCart,deleteCart}=require("../controllers/cartController")
 
 
 
@@ -27,5 +27,11 @@ router.put("/products/:productId",updateProduct)
 router.delete("/products/:productId",deleteProduct)
 
 router.post("/users/:userId/cart",authetication,authorisation,createCart)
+
+router.put("/users/:userId/cart",authetication,authorisation,updateCart)
+
+router.get("/users/:userId/cart",authetication,authorisation,getCart)
+
+router.delete("/users/:userId/cart",authetication,authorisation,deleteCart)
 
 module.exports= router

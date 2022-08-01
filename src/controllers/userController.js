@@ -198,7 +198,8 @@ const login = async function (req, res) {
         if (Object.keys(data).length == 0)
         res.status(400).send({ status: false, msg: "There are no any Data in Request Body Please Enter some Valid data" })
         let { email, password } = data
-
+          email=email.trim()
+          password= password.trim()
         if (!(isValidData(email) && isValidData(password)))
             res.status(400).send({ status: false, msg: "email and password both required" })
 
@@ -213,7 +214,8 @@ const login = async function (req, res) {
         let user = await userModel.findOne({ email: email })
        
         if (user) {
-            let passwordmatch = bcrypt.compareSync(data.password, user.password)
+
+            let passwordmatch = bcrypt.compareSync(password, user.password)
             if (passwordmatch) {
 
                 let token = jwt.sign({ userId: user._id }, "RoomNo-74", { expiresIn: '365d' })

@@ -23,7 +23,7 @@ const authetication = function (req, res, next) {
             return res.status(401).send({ status: false, msg: "token is invalid " })
             
         }
-        console.log(1)
+        
         req.decodedtoken = decodedtoken
         console.log("authenticated sucessfully")
         next()
