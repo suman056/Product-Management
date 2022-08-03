@@ -27,7 +27,13 @@ const createCart = async function (req, res) {
                     return res.status(400).send({status:false,message:"wrong cart id given in the request body"})
                 }
             }
-            let itemsnew = req.body.items
+            let {productId,quantity}= req.body
+            if(!quantity){
+                 quantity=1
+            }
+             let itemsnew={}
+             itemsnew.productId=productId
+             itemsnew.quantity=quantity
             let increamented = {}
             let itemcount = 0
             let cartCheck = await cartModels.findById({ _id: cartId }).select({ _id: 0, items: 1 })
@@ -38,11 +44,11 @@ const createCart = async function (req, res) {
 
 
 
-            if (!isValidObjectId(itemsnew[0].productId)) {
+            if (!isValidObjectId(itemsnew.productId)) {
                 return res.status(400).send({ status: false, message: "not a valid objectId" })
             }
-            if (typeof itemsnew[0].quantity != "number" || itemsnew[0].quantity < 1) {
-                return res.status(400).send({ status: false, message: `quantity for productId ${items[i].productId}is not valid` })
+            if (typeof itemsnew.quantity != "number" || itemsnew.quantity < 1) {
+                return res.status(400).send({ status: false, message: `quantity for productId ${items.productId}is not valid` })
             }
             
             
@@ -50,13 +56,13 @@ const createCart = async function (req, res) {
             
             for (let i = 0; i < cartCheck.items.length; i++) {
                 
-                if (cartCheck.items[i].productId == itemsnew[0].productId) {
-                    cartCheck.items[i].quantity = cartCheck.items[i].quantity + itemsnew[0].quantity
+                if (cartCheck.items[i].productId == itemsnew.productId) {
+                    cartCheck.items[i].quantity = cartCheck.items[i].quantity + itemsnew.quantity
                     flag++
                 }
             }
             if (flag == 0) {
-                cartCheck.items.push(itemsnew[0])
+                cartCheck.items.push(itemsnew)
                 itemcount=1
             }
             
@@ -64,11 +70,11 @@ const createCart = async function (req, res) {
 
             let totalPrice = 0
 
-            let priceProduct = await productModel.findOne({ _id: itemsnew[0].productId, isDeleted: false }).select({ price: 1, _id: 0 })
+            let priceProduct = await productModel.findOne({ _id: itemsnew.productId, isDeleted: false }).select({ price: 1, _id: 0 })
             if (!priceProduct) {
                 return res.status(400).send({ status: false, message: "this product is not available" })
             }
-            totalPrice = totalPrice + priceProduct.price * itemsnew[0].quantity
+            totalPrice = totalPrice + priceProduct.price * itemsnew.quantity
 
             increamented.totalPrice = totalPrice
 
@@ -80,34 +86,38 @@ const createCart = async function (req, res) {
             delete cartUpDated.items.map(x => delete x._id)
 
 
-            return res.status(200).send({ status: true, message: "Success", data: cartUpDated })
+            return res.status(201).send({ status: true, message: "Success", data: cartUpDated })
 
         }
         else {
-            let items = req.body.items
+            let {productId ,quantity}= req.body
             let filter = {}
+            if(!quantity){
+                quantity=1
+            }
+            let items={productId,quantity}
             filter.userId = userId
             let itemcount = 0
-            for (let i = 0; i < items.length; i++) {
-                if (!isValidObjectId(items[i].productId)) {
+            
+                if (!isValidObjectId(items.productId)) {
                     return res.status(400).send({ status: false, message: "not a valid objectId" })
                 }
 
-                if (typeof items[i].quantity != "number" || items[i].quantity < 1) {
-                    return res.status(400).send({ status: false, message: `quantity for productId ${items[i].productId}is not valid` })
+                if (typeof items.quantity != "number" || items.quantity < 1) {
+                    return res.status(400).send({ status: false, message: `quantity for productId ${items.productId}is not valid` })
                 }
-                itemcount = itemcount + items[i].quantity
-            }
+                itemcount = itemcount + items.quantity
+            
             filter.totalItems = 1
             let totalPrice = 0
-            for (let j = 0; j < items.length; j++) {
-                let priceProduct = await productModel.findOne({ _id: items[j].productId, isDeleted: false }).select({ price: 1, _id: 0 })
+           
+                let priceProduct = await productModel.findOne({ _id: items.productId, isDeleted: false }).select({ price: 1, _id: 0 })
                 if (!priceProduct) {
                     return res.status(400).send({ status: false, message: "this product is not available" })
                 }
-                totalPrice = totalPrice + priceProduct.price * items[0].quantity
+                totalPrice = totalPrice + priceProduct.price * items.quantity
 
-            }
+            
             filter.totalPrice = totalPrice
 
             filter.items = items

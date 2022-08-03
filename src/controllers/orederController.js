@@ -77,6 +77,7 @@ const updateOrder=async function(req,res){
 try{
     let userId=req.params.userId.trim()
 let orderId= req.body.orderId.trim()
+let statusbody=req.body.status.trim()
 let userCheck = await userModel.findOne({ _id: userId })
 if (!userCheck) {
     return res.status(404).send({ status: false, message: "user id doesn't exist" })
@@ -88,10 +89,11 @@ if(!orderCheck){
 if(orderCheck.userId.toString()!==userCheck._id.toString()){
     return res.status(404).send({ status: false, message: `order is not for ${userId}, you cannot order it  ` })
 }
-if(orderCheck.cancellable==true){
-    orderCheck.status="cancled"
-}else{
-    orderCheck.status="completed"
+
+if(orderCheck.cancellable==false){
+    if(statusbody=="cancled"){
+        return res.status(404).send({ status: false, message: `order is not for ${userId}, you cannot order it  ` })
+    }
 }
 if(req.body.isDeleted== Boolean){
     orderCheck.isDeleted=req.body.isDeleted

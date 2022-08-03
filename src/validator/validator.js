@@ -7,7 +7,7 @@ const isValidRequestBody =  function (requestBody) {
     return true 
 }
 const isValidAlpha= function(value){
-    return /^[a-zA-Z ]+$/.test(value)
+    return /[a-zA-Z ]+/.test(value)
 
 }
 

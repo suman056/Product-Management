@@ -8,7 +8,7 @@ const productCreate = async function (req, res) {
         let finalProduct = req.cretaeFolder
         let productCreate = await productModel.create(finalProduct)
 
-        res.status(201).send({ status: true, data: productCreate })
+        res.status(201).send({ status: true,message:"Success", data: productCreate })
     }
     catch (error) {
         res.status(500).send({ status: false, message: error.message })
@@ -125,7 +125,7 @@ const getProduct = async function (req, res) {
             return res.status(400).send({ status: false, msg: "product not exist" })
         }
         else {
-            return res.status(200).send({ status: true, msg: " product details fetched sucessfully", noOfProduct: productDetails.length, data: productDetails })
+            return res.status(200).send({ status: true, message:"Success", noOfProduct: productDetails.length, data: productDetails })
         }
     }
     catch (error) {
@@ -147,6 +147,9 @@ const updateProduct = async function (req, res) {
         return res.status(400).send({ status: false, message: "this product is not available" })
     }
     let { installments, availableSizes, style, isFreeShipping, price, description, title } = requestBody
+    if(!isValidRequestBody(requestBody)){
+        return res.status(400).send({ status: false, message: "nothing to update!!please give some input" })
+    }
     let filter = {}
     let missdata = ""
     if (title) {
@@ -209,7 +212,9 @@ const updateProduct = async function (req, res) {
         filter.price = price
     }
     if (isFreeShipping) {
-        if (isFreeShipping != Boolean) {
+        isFreeShipping=Boolean(isFreeShipping.trim())
+       
+        if (typeof isFreeShipping != "boolean") {
             return res.status(400).send({ status: false, message: "isFreeShipping must be bollean" })
         }
         filter.isFreeShipping = isFreeShipping
@@ -239,7 +244,8 @@ const updateProduct = async function (req, res) {
         }
         filter.installments = installments
     }
-    if (req.files) {
+ 
+    if (req.files.length>0) {
         let productImage = req.files
         if (req.files.length == 0) {
             return res.status(400).send({ status: false, message: "image is not available" })

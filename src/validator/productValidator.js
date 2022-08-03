@@ -33,9 +33,7 @@ const productaValid = async function (req, res, next) {
         if (!isValidData(price)) {
             missdata = missdata + " price"
         }
-        if (!isValidData(currencyId)) {
-            missdata = missdata + " currencyId"
-        }
+       
         if (!isValidData(style)) {
             missdata = missdata + " style"
         }
@@ -60,9 +58,7 @@ const productaValid = async function (req, res, next) {
             return res.status(400).send({ status: false, message: "title is already created" })
         }
         cretaeFolder.title = title
-        if (!isValidAlpha(description)) {
-            return res.status(400).send({ status: false, message: "description is not proper format" })
-        }
+       
         cretaeFolder.description = description
         if (typeof price != Number) {
             price = parseInt(price)
@@ -78,11 +74,17 @@ const productaValid = async function (req, res, next) {
             }
             cretaeFolder.currencyId = currencyId
         }
+        else{
+            cretaeFolder.currencyId = "INR"
+        }
         if(currencyFormat){
-        if (!currencyFormat || currencyFormat != "₹") {
+        if ( currencyFormat != "₹") {
             return res.status(400).send({ status: false, message: "currencyFormat should be ₹" })
         }
         cretaeFolder.currencyFormat = currencyFormat
+    }
+    else{
+        cretaeFolder.currencyFormat="₹"
     }
         if (isFreeShipping) {
             if (typeof isFreeShipping != Boolean) {

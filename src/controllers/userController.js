@@ -11,7 +11,18 @@ function Checkphone(number) {
     return false
 }
 
-
+function Checkaddress(value){
+    if (/^[a-zA-Z0-9\s\,\''\-]*$/.test(value)) {
+        return true
+    }
+    return false
+}
+function Checkpincode(value){
+    if (/^[1-9]{1}[0-9]{5}$/.test(value)) {
+        return true
+    }
+    return false
+}
 const registerUser = async function (req, res) {
     try {
 
@@ -26,13 +37,22 @@ const registerUser = async function (req, res) {
               requestBody =JSON.parse(req.body.data)
               
         }
+        let { fname, lname, email, password, phone, address } = requestBody
         
+       try{
+        if(typeof req.body.address=="string"){
+            address=JSON.parse(req.body.address)
+
+        }
+    }catch(err){
+        return res.status(400).send({status:false,message:"address should be in proper format"})
+    }
                 
                 let profileImage=req.files
               
       
         //extract param
-        let { fname, lname, email, password, phone, address } = requestBody
+       
         // console.log(profileImage)
         let missdata = ""
         
@@ -115,15 +135,6 @@ const registerUser = async function (req, res) {
 
         }
 
-        if (!isValidData(email)) {
-            res.status(400).send({ status: false, message: 'email is required' })
-            return
-        }
-
-        if (!isValidData(password)) {
-            res.status(400).send({ status: false, message: 'password is required' })
-            return
-        }
         
         if (!((password.length > 7) && (password.length < 16))) {
 
@@ -133,27 +144,47 @@ const registerUser = async function (req, res) {
         if (!Checkphone(phone.trim())) {
             return res.status(400).send({ status: false, msg: "The phone no. is not valid" })
         }
-        if (!isValidData(address)) {
-            return res.status(400).send({ status: false, msg: "Address is mandatory" })
+       
+        if (typeof address!="object") {
+            return res.status(400).send({ status: false, msg: "Address is not in proper format" })
         }
-        if (!isValidData(address.shipping)) {
+        if (typeof address.shipping!="object") {
             return res.status(400).send({ status: false, msg: "Shipping address is missing mandatory fields" })
-
         }
-        if (!isValidData(address.shipping.street && address.shipping.city && address.shipping.pincode)) {
-            return res.status(400).send({ status: false, msg: "Some shipping address details or detail are/is missing" })
+        if (!Checkaddress(address.shipping.street && address.shipping.city )) {
+            return res.status(400).send({ status: false, msg: "Some shipping address is not valid" })
         }
-        if (!isValidData(address.billing)) {
+        if(!Checkpincode(address.shipping.pincode)){
+            return res.status(400).send({ status: false, msg: "shipping-pincode is not valid" })
+        }
+        if (typeof address.billing!="object") {
             return res.status(400).send({ status: false, msg: "Billing address is missing mandatory fields" })
         }
-        if (!isValidData(address.billing.street && address.billing.city && address.billing.pincode)) {
+        if (!Checkaddress(address.billing.street && address.billing.city )) {
             return res.status(400).send({ status: false, msg: "Some billing address details or detail are/is missing" })
         }
-        const isNumberorEmailAlreadyUsed = await userModel.findOne({$or:[ {phone},{email} ]});
-        
-        if (isNumberorEmailAlreadyUsed) {
-            res.status(400).send({ status: false, message: `${phone} number or ${email} mail is already registered` })
-            return
+        if(!Checkpincode(address.billing.pincode)){
+            return res.status(400).send({ status: false, msg: "billing-pincode is not valid" })
+        }
+        const isNumberorEmailAlreadyUsed = await userModel.find({$or:[ {phone},{email} ]});
+       
+        if (isNumberorEmailAlreadyUsed.length!=0) {
+
+            let alreadyused=""
+
+        for  (let i=0;i<isNumberorEmailAlreadyUsed.length;i++){
+
+           if(isNumberorEmailAlreadyUsed[i].email==email){
+
+           alreadyused=alreadyused+` ${email} mail ` }
+
+            if(isNumberorEmailAlreadyUsed[i].phone==phone){
+
+          alreadyused= alreadyused+`${phone} number ` }
+}
+          let response= alreadyused+"is already used"
+
+          return res.status(400).send({status:false,message:response})
         }
         if (!isValidData(email)) {
             res.status(400).send({ status: false, message: 'Invalid request parameters. Please provide valid email' })
@@ -174,7 +205,7 @@ const registerUser = async function (req, res) {
             profileImage = uploadedFileURL
             const userData = { fname, lname, email, phone, profileImage, password: EncrypPassword, address }
             let saveduser = await userModel.create(userData)
-            res.status(201).send({ status: true, message: 'user created succesfully', data: saveduser })
+            res.status(201).send({ status: true, message: 'User created successfully', data: saveduser })
         }
         else {
             res.status(400).send({ status: false, msg: "No file to write" });
@@ -184,7 +215,7 @@ const registerUser = async function (req, res) {
     }
     catch (err) {
         res.status(500).send({ status: false, message: err.message })
-        
+        console.log(err)
         
     }
 }
@@ -335,10 +366,13 @@ const updateUser = async function (req, res) {
             updateUserData['password'] = encrypt
         }
         if (address) {
-            console.log(address)
+         
             if (typeof address == "string") {
                 let Address = JSON.parse(address)
                 var address = Address
+            }
+            if(typeof address!="object"){
+                return res.status(400).send({ status: false, message: 'address should be in proper format' })
             }
 
             if (address.shipping) {
@@ -355,11 +389,16 @@ const updateUser = async function (req, res) {
                     updateUserData['address.shipping.city'] = address.shipping.city
                 }
                 if (address.shipping.pincode) {
-                    console.log(address.shipping.pincode)
-                    if (/^[1-9]{1}[0-9]{5}$/.test(address.shipping.pincode) == false) {
-                        return res.status(400).send({ status: false, message: 'Please provide pincode to update' })
+                  
+                    if (!isValidData(address.shipping.pincode) ) {
+                        return res.status(400).send({ status: false, message: 'Please provide shiiping-pincode to update' })
                     }
+                   
                     let pinCode = parseInt(address.shipping.pincode)
+                  
+                    if (Checkpincode(pinCode) == false) {
+                        return res.status(400).send({ status: false, message: 'shipping pincode  should be in proper format' })
+                    }
                     updateUserData['address.shipping.pincode'] = pinCode
                 }
             }
@@ -378,9 +417,14 @@ const updateUser = async function (req, res) {
                     updateUserData['address.billing.city'] = address.billing.city
                 }
                 if (address.billing.pincode) {
+                    if (!isValidData(address.billing.pincode) ) {
+                        return res.status(400).send({ status: false, message: 'Please provide shiiping-pincode to update' })
+                    }
+                   
                     let pinCode = parseInt(address.billing.pincode)
-                    if (typeof pinCode !== 'number') {
-                        return res.status(400).send({ status: false, message: 'Please provide pincode to update' })
+                  
+                    if (Checkpincode(pinCode) == false) {
+                        return res.status(400).send({ status: false, message: 'shipping pincode  should be in proper format' })
                     }
                     updateUserData['address.billing.pincode'] = pinCode
                 }
@@ -396,7 +440,7 @@ const updateUser = async function (req, res) {
             }
         }
         const updatedUserData = await userModel.findOneAndUpdate({ _id: userId }, updateUserData, { new: true })
-        res.status(201).send({ status: true, data: updatedUserData })
+        res.status(200).send({ status: true, message: "User profile updated", data: updatedUserData })
     } catch (error) {
         res.status(500).send({ status: false, msg: error });
         console.log(error)
