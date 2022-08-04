@@ -80,10 +80,10 @@ const createCart = async function (req, res) {
 
 
 
-            let cartUpDated = await cartModels.findByIdAndUpdate({ _id: cartId }, { items: cartCheck.items, $inc: increamented }, { new: true })
+            let cartUpDated = await cartModels.findByIdAndUpdate({ _id: cartId }, { items: cartCheck.items, $inc: increamented }, { new: true }).select({'items._id':0})
 
-            cartUpDated = { ...cartUpDated.toObject() }
-            delete cartUpDated.items.map(x => delete x._id)
+            // cartUpDated = { ...cartUpDated.toObject() }
+            // delete cartUpDated.items.map(x => delete x._id)
 
 
             return res.status(201).send({ status: true, message: "Success", data: cartUpDated })
@@ -245,13 +245,18 @@ const getCart= async function(req,res){
    if(!userCheck){
     return res.status(404).send({status:false,message:"user not found"})
    }
-   let cartCheck= await cartModels.findOne({userId:userId})
+   let cartCheck= await cartModels.findOne({userId:userId}).populate({
+    path: 'items.productId',
+    select:
+      'title price productImage style availableSizes isDeleted',
+  })
    if(!cartCheck){
     return res.status(404).send({status:false,message:"cart not found"})
    }
    cartCheck= { ...cartCheck.toObject() }
    if (cartCheck.items.length != 0) {
     cartCheck.items.map(x => delete x._id)
+    cartCheck.items.map(x => delete x.productId._id)
    }
    res.status(200).send({ status: true, message: "Success", data: cartCheck })
    
