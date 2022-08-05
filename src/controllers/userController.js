@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 
 function Checkphone(number) {
-    if (/^(1\s|1|)?((\(\d{3}\))|\d{3})(\-|\s)?(\d{3})(\-|\s)?(\d{4})$/.test(number)) {
+    if (/^[6-9]{1}[0-9]{9}$/.test(number)) {
         return true
     }
     return false
@@ -42,12 +42,17 @@ const registerUser = async function (req, res) {
        try{
         if(typeof req.body.address=="string"){
             address=JSON.parse(req.body.address)
+           
 
         }
     }catch(err){
         return res.status(400).send({status:false,message:"address should be in proper format"})
     }
-                
+    for(let key in requestBody){
+        
+        requestBody[key]=requestBody[key].trim()
+    }
+          
                 let profileImage=req.files
               
       
@@ -134,17 +139,21 @@ const registerUser = async function (req, res) {
             return res.status(400).send({ status: false, message: 'last name is not valid' })
 
         }
-
         
+        if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email.trim()))) {
+            res.status(400).send({ status: false, message: `Email should be a valid email address` })
+            return
+        }
+        
+       
+        if (!Checkphone(phone.trim())) {
+            return res.status(400).send({ status: false, msg: "The phone no. is not valid" })
+        }
         if (!((password.length > 7) && (password.length < 16))) {
 
             return res.status(400).send({ status: false, message: `Password length should be between 8 and 15.` })
 
         }
-        if (!Checkphone(phone.trim())) {
-            return res.status(400).send({ status: false, msg: "The phone no. is not valid" })
-        }
-       
         if (typeof address!="object") {
             return res.status(400).send({ status: false, msg: "Address is not in proper format" })
         }
@@ -166,6 +175,7 @@ const registerUser = async function (req, res) {
         if(!Checkpincode(address.billing.pincode)){
             return res.status(400).send({ status: false, msg: "billing-pincode is not valid" })
         }
+       
         const isNumberorEmailAlreadyUsed = await userModel.find({$or:[ {phone},{email} ]});
        
         if (isNumberorEmailAlreadyUsed.length!=0) {
@@ -186,15 +196,9 @@ const registerUser = async function (req, res) {
 
           return res.status(400).send({status:false,message:response})
         }
-        if (!isValidData(email)) {
-            res.status(400).send({ status: false, message: 'Invalid request parameters. Please provide valid email' })
-            return
-        }
+       
         
-        if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email.trim()))) {
-            res.status(400).send({ status: false, message: `Email should be a valid email address` })
-            return
-        }
+       
         let files = req.files;
         if (files && files.length > 0) {
             //upload to s3 and return true..incase of error in uploading this will goto catch block( as rejected promise)

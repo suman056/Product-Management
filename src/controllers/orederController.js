@@ -12,9 +12,17 @@ const createOrder = async function (req, res) {
         if (!userCheck) {
             return res.status(404).send({ status: false, message: "user id doesn't exist" })
         }
+        let cartId=req.body.cartId.trim()
+        if(!isValidObjectId(cartId)){
+            return res.status(400).send({status:false,message:`${cartId} is not a valid object id`})
+        }
+    
         let cartCheck = await cartModel.findOne({ userId: userId })
         if (!cartCheck) {
             return res.status(404).send({ status: false, message: "no cart is created for this user " })
+        }
+        if(cartId!=cartCheck._id){
+            return res.status(400).send({status:false,message:`you are not allowed to order it `})
         }
         if (cartCheck.items.length == 0) {
             return res.status(400).send({ status: false, message: "cart is empty" })
@@ -96,6 +104,9 @@ try{
     let userId=req.params.userId.trim()
 let orderId= req.body.orderId.trim()
 let statusbody=req.body.status.trim()
+if(!isValidObjectId(orderId)){
+    return res.status(400).send({status:false,message:`${orderId} not a object id`})
+}
 if(req.body.cancellable){
     return res.status(400).send({status:false,message:"this feature(cancellable ) is not available right now"})
 }
@@ -113,13 +124,14 @@ if(orderCheck.userId.toString()!==userCheck._id.toString()){
 
 if(orderCheck.cancellable==false){
     if(statusbody=="canceled"){
-        return res.status(404).send({ status: false, message: `you cannot canceled this oredr ` })
+        return res.status(400).send({ status: false, message: `you cannot canceled this oredr ` })
     }
     if(statusbody!="completed"){
-        return res.status(404).send({ status: false, message: `this order can only be completed` })
+        return res.status(400).send({ status: false, message: `this order can only be completed` })
     }
 }
 else if(orderCheck.status=="completed"){
+    //
     if(statusbody=="pending"){
         return res.status(400).send({status:false,message:"this can only be completed !!cannot make it pending"})
     }
