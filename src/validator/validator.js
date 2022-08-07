@@ -7,8 +7,11 @@ const isValidRequestBody =  function (requestBody) {
     return true 
 }
 const isValidAlpha= function(value){
-    return /[a-zA-Z ]+/.test(value)
+    return /^[a-zA-Z\s]*$/.test(value)
 
+}
+const isValidAlphaNumeric=function(value){ 
+    return /^[a-zA-Z0-9 ]*$/.test(value)
 }
 
 const isValidData = function (value) {
@@ -23,5 +26,5 @@ const isValidObjectId = function (objectId) {
 }
 
 module.exports = {
-    isValidRequestBody, isValidData, isValidObjectId,isValidAlpha
+    isValidRequestBody, isValidData, isValidObjectId,isValidAlpha,isValidAlphaNumeric
 }

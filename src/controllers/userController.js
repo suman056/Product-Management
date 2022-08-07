@@ -242,8 +242,8 @@ const login = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Email Should be valid EmailId" })
         }
         
-        if (password.length < 8 || password.length > 16) {
-            return res.status(400).send({ status: false, msg: "Password Shiuld be Min 8 and Max 16" })
+        if (password.length < 8 || password.length > 15) {
+            return res.status(400).send({ status: false, msg: "Password Shiuld be Min 8 and Max 15" })
         }
 
         let user = await userModel.findOne({ email: email })
@@ -297,40 +297,59 @@ const updateUser = async function (req, res) {
     try {
         let files = req.files;
         const requestBody = req.body
+        
         userId = req.decodedtoken.userId
 
         const userFound = await userModel.findOne({ _id: userId })
         if (!userFound) {
             return res.status(404).send({ status: false, message: `User do not exists` })
         }
-
-
-        if (!isValidRequestBody(requestBody)) {
+       
+         
+        if (!isValidRequestBody(requestBody)&&(typeof files=="undefined")) {
             res.status(400).send({ status: false, message: 'Please provide details to update' })
             return
         }
         // destructuring the body
         var { fname, lname, email, phone, password, address } = requestBody;
+        
         let updateUserData = {}
+        if(fname?.length==0){
+             return res.status(400).send({status:false,message:"fname is present !! but value is not assigned"})
+        }
         if (fname) {
             if (!isValidData(fname)) {
                 return res.status(400).send({ status: false, message: 'fname Required' })
             }
-
+            if (!isValidAlpha(fname)) {
+                return res.status(400).send({ status: false, message: 'first name is not valid' })
+    
+            }
+            fname=fname.trim()
             updateUserData['fname'] = fname
         }
+        if(lname?.length==0){
+            return res.status(400).send({status:false,message:"lname is present !! but value is not assigned"})
+       }
         if (lname) {
+            
             if (!isValidData(lname)) {
                 return res.status(400).send({ status: false, message: 'lname Required' })
+            } if (!isValidAlpha(lname)) {
+                return res.status(400).send({ status: false, message: 'last name is not valid' })
+    
             }
-
+            lname=lname.trim()
             updateUserData['lname'] = lname
-        }
+        }if(email?.length==0){
+            return res.status(400).send({status:false,message:"email is present !! but value is not assigned"})
+       }
         if (email) {
+
             if (!isValidData(email)) {
                 return res.status(400).send({ status: false, message: 'Invalid request parameters. email required' })
             }
-
+            email=email.trim()
             if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email.trim()))) {
                 return res.status(400).send({ status: false, message: `Email should be a valid email address` })
             }
@@ -341,12 +360,15 @@ const updateUser = async function (req, res) {
 
             updateUserData['email'] = email
         }
+        if(phone?.length==0){
+            return res.status(400).send({status:false,message:"phone is present !! but value is not assigned"})
+       }
         if (phone) {
             if (!isValidData(phone)) {
                 return res.status(400).send({ status: false, message: "phone number is not given in string" })
             }
-
-            if (!(/^(1\s|1|)?((\(\d{3}\))|\d{3})(\-|\s)?(\d{3})(\-|\s)?(\d{4})$/.test(phone.trim()))) {
+             phone=phone.trim()
+            if (!Checkphone(phone)) {
                 return res.status(400).send({ status: false, message: `Please provide valid phone number` })
             }
             const duplicatePhone = await userModel.find({ phone: phone })
@@ -356,7 +378,9 @@ const updateUser = async function (req, res) {
 
             updateUserData['phone'] = phone
         }
-
+        if(password?.length==0){
+            return res.status(400).send({status:false,message:"password is present !! but value is not assigned"})
+       }
         if (password) {
             if (!isValidData(password)) {
                 return res.status(400).send({ status: false, message: "password in not in a proper format " })
@@ -368,7 +392,9 @@ const updateUser = async function (req, res) {
             }
             const encrypt = await bcrypt.hash(password, 10)
             updateUserData['password'] = encrypt
-        }
+        }if(address?.length==0){
+            return res.status(400).send({status:false,message:"address is present !! but value is not assigned"})
+       }
         if (address) {
          
             if (typeof address == "string") {
@@ -422,19 +448,20 @@ const updateUser = async function (req, res) {
                 }
                 if (address.billing.pincode) {
                     if (!isValidData(address.billing.pincode) ) {
-                        return res.status(400).send({ status: false, message: 'Please provide shiiping-pincode to update' })
+                        return res.status(400).send({ status: false, message: 'Please provide billing-pincode to update' })
                     }
                    
                     let pinCode = parseInt(address.billing.pincode)
                   
                     if (Checkpincode(pinCode) == false) {
-                        return res.status(400).send({ status: false, message: 'shipping pincode  should be in proper format' })
+                        return res.status(400).send({ status: false, message: 'billing pincode  should be in proper format' })
                     }
                     updateUserData['address.billing.pincode'] = pinCode
                 }
 
             }
         }
+       
         // let files = req.files;
         if (files && files.length > 0) {
             let uploadedFileURL = await aws.uploadFile(files[0]);

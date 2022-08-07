@@ -1,4 +1,4 @@
-const { isValidRequestBody, isValidData, isValidObjectId, isValidAlpha } = require("./validator")
+const { isValidRequestBody, isValidData, isValidObjectId, isValidAlpha ,isValidAlphaNumeric} = require("./validator")
 const aws = require("./aws")
 const produnctModel = require("../model/productModel")
 
@@ -50,7 +50,7 @@ const productaValid = async function (req, res, next) {
         }
         // indivisual validation
 
-        if (!isValidAlpha(title)) {
+        if (!isValidAlphaNumeric(title)) {
             return res.status(400).send({ status: false, message: "title is not in proper format" })
         }
         let titleCheck = await produnctModel.findOne({ title })
@@ -93,7 +93,7 @@ const productaValid = async function (req, res, next) {
             cretaeFolder.isFreeShipping = isFreeShipping
         }
         if (style) {
-            if (!isValidAlpha(style)) {
+            if (!isValidAlphaNumeric(style)) {
                 return res.status(400).send({ status: false, message: "style is not in proper format" })
             }
             cretaeFolder.style = style

@@ -1,5 +1,5 @@
 const productModel = require("../model/productModel")
-const { isValidRequestBody, isValidData, isValidObjectId, isValidAlpha } = require('../validator/validator')
+const { isValidRequestBody, isValidData, isValidObjectId, isValidAlpha, isValidAlphaNumeric } = require('../validator/validator')
 const aws = require("../validator/aws")
 
 
@@ -46,6 +46,20 @@ const getProduct = async function (req, res) {
         let filteredProduct = { isDeleted: false }
 
         // ---------------SIZE--------------------//
+        if(size?.length==0){
+            return res.status(400).send({status:false,message:"size is present !! but value is not assigned"})
+       }if(name?.length==0){
+        return res.status(400).send({status:false,message:"name is present !! but value is not assigned"})
+   }
+   if(priceGreaterThan?.length==0){
+    return res.status(400).send({status:false,message:"priceGreaterThan is present !! but value is not assigned"})
+}
+if(priceLessThan?.length==0){
+    return res.status(400).send({status:false,message:"priceLessThan is present !! but value is not assigned"})
+}
+if(priceSort?.length==0){
+    return res.status(400).send({status:false,message:"priceSort is present !! but value is not assigned"})
+}
         if (data.hasOwnProperty("size")) {
 
             if (isValidData(size)) {
@@ -142,48 +156,50 @@ const updateProduct = async function (req, res) {
     if (!isValidObjectId(productId)) {
         return res.status(400).send({ status: false, message: `${productId} is not a valid objectid` })
     }
-    let idCheck = await productModel.findOne({ _id: productId, isDeleted: true })
-    if (idCheck) {
-        return res.status(400).send({ status: false, message: "this product is not available" })
+    let idCheck = await productModel.findOne({ _id: productId, isDeleted: false })
+    if (!idCheck) {
+        return res.status(404).send({ status: false, message: "this product is not available" })
     }
     let { installments, availableSizes, style, isFreeShipping, price, description, title } = requestBody
     if(!isValidRequestBody(requestBody)){
         return res.status(400).send({ status: false, message: "nothing to update!!please give some input" })
     }
+
     let filter = {}
     let missdata = ""
-    if (title) {
-        if (!isValidData(title)) {
+    if (title?.length==0||title) {
+       
+        if (title?.length==0||title.trim().length==0) {
             missdata = missdata + " title"
         }
     }
-    if (description) {
-        if (!isValidData(description)) {
+    if (description?.length==0||description) {
+        if (description?.length==0||description.trim().length==0) {
             missdata = missdata + " description"
         }
     }
-    if (price) {
-        if (!isValidData(price)) {
+    if (price?.length==0||price) {
+        if (price?.length==0||price.trim().length==0) {
             missdata = missdata + " price"
         }
     }
-    if (isFreeShipping) {
-        if (!isValidData(isFreeShipping)) {
+    if (isFreeShipping?.length==0||isFreeShipping) {
+        if (isFreeShipping?.length==0||isFreeShipping.trim().length==0) {
             missdata = missdata + " isFreeShipping"
         }
     }
-    if (style) {
-        if (!isValidData(style)) {
+    if (style?.length==0||style) {
+        if (style?.length==0||style.trim().length==0) {
             missdata = missdata + " style"
         }
     }
-    if (availableSizes) {
-        if (!isValidData(availableSizes)) {
+    if (availableSizes?.length==0||availableSizes) {
+        if (availableSizes?.length==0||availableSizes.trim().length==0) {
             missdata = missdata + " availableSizes"
         }
     }
-    if (installments) {
-        if (!isValidData(installments)) {
+    if (installments?.length==0||installments) {
+        if (installments?.length==0||installments.trim().length==0) {
             missdata = missdata + " installments"
         }
     }
@@ -192,7 +208,7 @@ const updateProduct = async function (req, res) {
         return res.status(400).send({ status: false, message: message })
     }
     if (title) {
-        if (!isValidAlpha(title)) {
+        if (!isValidAlphaNumeric(title)) {
             return res.status(400).send({ status: false, message: "title is not proper format" })
         }
         let titleChecks = await productModel.findOne({ title })
@@ -220,7 +236,7 @@ const updateProduct = async function (req, res) {
         filter.isFreeShipping = isFreeShipping
     }
     if (style) {
-        if (!isValidAlpha(style)) {
+        if (!isValidAlphaNumeric(style)) {
             return res.status(400).send({ status: false, message: "isFreeShipping must be bollean" })
         }
         filter.style = style

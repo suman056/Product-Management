@@ -10,12 +10,12 @@ const createCart = async function (req, res) {
             return res.status(400).send({ status: false, message: "user id is not present the path parameters" })
         }
         if (!isValidObjectId(userId)) {
-            return res.status(400).send({ status: false, message: `${userId} is not a valid object id` })
+            return res.status(400).send({ status: false, message: `${userId} userId is not a valid object id` })
         }
         let userCheck = await userModel.findById({ _id: userId })
 
         if (!userCheck) {
-            return res.status(404).send({ status: false, message: `${userId} doesn't exist` })
+            return res.status(404).send({ status: false, message: `${userId} userId doesn't exist` })
         }
         let alreadyCart = await cartModels.findOne({ userId: userId })
         
@@ -72,7 +72,7 @@ const createCart = async function (req, res) {
 
             let priceProduct = await productModel.findOne({ _id: itemsnew.productId, isDeleted: false }).select({ price: 1, _id: 0 })
             if (!priceProduct) {
-                return res.status(400).send({ status: false, message: "this product is not available" })
+                return res.status(404).send({ status: false, message: "this product is not available" })
             }
             totalPrice = totalPrice + priceProduct.price * itemsnew.quantity
 
@@ -113,7 +113,7 @@ const createCart = async function (req, res) {
            
                 let priceProduct = await productModel.findOne({ _id: items.productId, isDeleted: false }).select({ price: 1, _id: 0 })
                 if (!priceProduct) {
-                    return res.status(400).send({ status: false, message: "this product is not available" })
+                    return res.status(404).send({ status: false, message: "this product is not available" })
                 }
                 totalPrice = totalPrice + priceProduct.price * items.quantity
 
@@ -291,7 +291,7 @@ const deleteCart= async function(req,res){
    if (deletedCart.items.length != 0) {
     deletedCart.items.map(x => delete x._id)
    }
-    res.status(200).send({ status: true, message: "Success", data: cartCheck })}
+    res.status(204).send({ status: true, message: "Success", data: cartCheck })}
     catch(error){
         res.status(500).send({ status: false, message: error.message })
         console.log(error)

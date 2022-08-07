@@ -1,16 +1,16 @@
 const jwt = require("jsonwebtoken")
 const {isValidRequestBody, isValidData, isValidObjectId} = require("../validator/validator")
-
+const userModel=require('../model/userModel')
 
 const authetication = function (req, res, next) {
     try {
         const token1 = req.headers["authorization"]||req.headers["Authorization"]
-        let token= token1.split(" ")[1]
-
-      
-        if (!token) {
+        
+        
+        if (!token1) {
             return res.status(401).send({ status: false, message: "token is missing" })
         }
+        let token= token1.split(" ")[1]
         try {
             var decodedtoken = jwt.verify(token, "RoomNo-74", { ignoreExpiration: true });
             
@@ -30,10 +30,11 @@ const authetication = function (req, res, next) {
     }
     catch (err) {
         res.status(500).send({ status: false, error: err.message })
+        console.log(err)
     }
 
 }
-const authorisation= function(req,res,next){
+const authorisation=async function(req,res,next){
     try {
         let dToken=req.decodedtoken
         let userId=req.params.userId.trim()
@@ -44,7 +45,10 @@ const authorisation= function(req,res,next){
         if(!isValidObjectId(userId)){
             return res.status(401).send({status:false,message:"not a valid userId"})
         }
-        
+        const userFound = await userModel.findOne({ _id: userId })
+        if (!userFound) {
+            return res.status(404).send({ status: false, message: `User do not exists` })
+        }
         if(dToken.userId!=userId){
             return res.status(403).send({status:false,message:"you are not authorised"})
 

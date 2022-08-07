@@ -59,10 +59,15 @@ const createOrder = async function (req, res) {
         cart.totalPrice = cartCheck.totalPrice
         cart.totalItems = cartCheck.totalItems
         cart.totalQuantity = totalQuantity
-        if (req.body.cancellable) {
-            if (typeof req.body.cancellable != Boolean) {
+        let cancellable=req.body.cancellable
+        
+        if (typeof cancellable!="undefined") {
+           
+           
+            if (typeof cancellable != "boolean") {
                 return res.status(400).send({ status: false, message: "cancellable should be boolean" })
             }
+            cart.cancellable=cancellable
         }
         let sts = ["pending"]
         if (req.body.status) {
@@ -88,6 +93,7 @@ const createOrder = async function (req, res) {
            filter.totalItems=0
            filter.totalPrice=0
         let cartUpdated=await cartModel .findByIdAndUpdate({_id:cartCheck._id},filter,{new:true})
+       
         let oredrCreate= await  orderModel.create(cart)
         oredrCreate = { ...oredrCreate.toObject() }
          oredrCreate.items.map(x => delete x._id)
@@ -124,7 +130,7 @@ if(orderCheck.userId.toString()!==userCheck._id.toString()){
 
 if(orderCheck.cancellable==false){
     if(statusbody=="canceled"){
-        return res.status(400).send({ status: false, message: `you cannot canceled this oredr ` })
+        return res.status(400).send({ status: false, message: `you cannot canceled this order ` })
     }
     if(statusbody!="completed"){
         return res.status(400).send({ status: false, message: `this order can only be completed` })
@@ -135,17 +141,20 @@ else if(orderCheck.status=="completed"){
     if(statusbody=="pending"){
         return res.status(400).send({status:false,message:"this can only be completed !!cannot make it pending"})
     }
+    if(statusbody=="canceled"){
+        return res.status(400).send({status:false,message:"this can only be completed !!cannot make it canceled"})
+    }
+}else if(orderCheck.status=="canceled"){
+    if(statusbody!="canceled"){
+        return res.status(400).send({status:false,message:"this has canceled please create a oreder"})
+    }
 }
 else{
 let sts = [ "completed", "canceled"]
 if(sts.includes(statusbody)==false){
    return res.status(400).send({status:false,message:"this can only be completed or canceled"})
 }}
-if(orderCheck.status=="canceled"){
-    if(statusbody!="canceled"){
-        return res.status(400).send({status:false,message:"this has canceled please create a oreder"})
-    }
-}
+
 orderCheck.status=statusbody
 if(req.body.isDeleted== Boolean){
     orderCheck.isDeleted=req.body.isDeleted
