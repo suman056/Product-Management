@@ -10,7 +10,7 @@ app.use(multer().any(),(err, req, res, next) => {res.status(400).send({status:fa
 app.use(bodyParser.json())
 
 
-mongoose.connect("mongodb+srv://suman:Mdhang%40123@atlascluster.tlenk.mongodb.net/group74Database"
+mongoose.connect("mongodb+srv://suman:Mdhang%40123@atlascluster.tlenk.mongodb.net/productManagement"
     , { useNewUrlParser: true })
     .then(() => console.log("MongoDb is connected"))
     .catch(err => console.log(err))
