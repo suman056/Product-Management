@@ -12,17 +12,17 @@ const createOrder = async function (req, res) {
         if (!userCheck) {
             return res.status(404).send({ status: false, message: "user id doesn't exist" })
         }
-        let cartId=req.body.cartId.trim()
-        if(!isValidObjectId(cartId)){
-            return res.status(400).send({status:false,message:`${cartId} is not a valid object id`})
+        let cartId = req.body.cartId.trim()
+        if (!isValidObjectId(cartId)) {
+            return res.status(400).send({ status: false, message: `${cartId} is not a valid object id` })
         }
-    
+
         let cartCheck = await cartModel.findOne({ userId: userId })
         if (!cartCheck) {
             return res.status(404).send({ status: false, message: "no cart is created for this user " })
         }
-        if(cartId!=cartCheck._id){
-            return res.status(400).send({status:false,message:`you are not allowed to order it `})
+        if (cartId != cartCheck._id) {
+            return res.status(400).send({ status: false, message: `you are not allowed to order it ` })
         }
         if (cartCheck.items.length == 0) {
             return res.status(400).send({ status: false, message: "cart is empty" })
@@ -33,7 +33,7 @@ const createOrder = async function (req, res) {
         let itemLength = cartCheck.items.length
         let flag = 0
         let totalQuantity = 0
-        let missingitem=""
+        let missingitem = ""
         for (let i = 0; i < itemLength; i++) {
             //need to ask wheather we have to check the productId is present or not
             if (cartCheck.items[i].quantity >= 1) {
@@ -42,16 +42,16 @@ const createOrder = async function (req, res) {
                 totalQuantity += cartCheck.items[i].quantity
 
             }
-            let productCheck= await productModel.findOne({_id:cartCheck.items[i].productId,isDeleted:false})
-            if(!productCheck){
+            let productCheck = await productModel.findOne({ _id: cartCheck.items[i].productId, isDeleted: false })
+            if (!productCheck) {
 
-                missingitem=missingitem+`   ${cartCheck.items[i].productId}`
+                missingitem = missingitem + `   ${cartCheck.items[i].productId}`
             }
-            
+
         }
-        if(missingitem.length>0){
-            let response=missingitem+" product not found "
-            return res.status(404).send({status:false,message:response})
+        if (missingitem.length > 0) {
+            let response = missingitem + " product not found "
+            return res.status(404).send({ status: false, message: response })
         }
         if (flag == 0) {
             return res.status(400).send({ status: false, message: "cart is empty" })
@@ -59,19 +59,19 @@ const createOrder = async function (req, res) {
         cart.totalPrice = cartCheck.totalPrice
         cart.totalItems = cartCheck.totalItems
         cart.totalQuantity = totalQuantity
-        let cancellable=req.body.cancellable
-        
-        if (typeof cancellable!="undefined") {
-           
-           
+        let cancellable = req.body.cancellable
+
+        if (typeof cancellable != "undefined") {
+
+
             if (typeof cancellable != "boolean") {
                 return res.status(400).send({ status: false, message: "cancellable should be boolean" })
             }
-            cart.cancellable=cancellable
+            cart.cancellable = cancellable
         }
         let sts = ["pending"]
         if (req.body.status) {
-            
+
             if (!sts.includes(req.body.status)) {
                 return res.status(400).send({ status: false, message: "status should be pending" })
             }
@@ -84,20 +84,20 @@ const createOrder = async function (req, res) {
                 if (typeof req.body.deletedAt != Date) {
                     return res.status(400).send({ status: false, message: "deletedAt should be in Date format " })
                 }
-                cart.deletedAt=deletedAt
+                cart.deletedAt = deletedAt
             }
-            cart.isDeleted=isDeleted
+            cart.isDeleted = isDeleted
         }
-        let filter={}
-           filter.items=[]
-           filter.totalItems=0
-           filter.totalPrice=0
-        let cartUpdated=await cartModel .findByIdAndUpdate({_id:cartCheck._id},filter,{new:true})
-       
-        let oredrCreate= await  orderModel.create(cart)
+        let filter = {}
+        filter.items = []
+        filter.totalItems = 0
+        filter.totalPrice = 0
+        let cartUpdated = await cartModel.findByIdAndUpdate({ _id: cartCheck._id }, filter, { new: true })
+
+        let oredrCreate = await orderModel.create(cart)
         oredrCreate = { ...oredrCreate.toObject() }
-         oredrCreate.items.map(x => delete x._id)
-        res.status(201).send({status:true,message:"Success",data:oredrCreate})
+        oredrCreate.items.map(x => delete x._id)
+        res.status(201).send({ status: true, message: "Success", data: oredrCreate })
 
 
     } catch (error) {
@@ -105,73 +105,74 @@ const createOrder = async function (req, res) {
     }
 }
 
-const updateOrder=async function(req,res){
-try{
-    let userId=req.params.userId.trim()
-let orderId= req.body.orderId.trim()
-let statusbody=req.body.status.trim()
-if(!isValidObjectId(orderId)){
-    return res.status(400).send({status:false,message:`${orderId} not a object id`})
-}
-if(req.body.cancellable){
-    return res.status(400).send({status:false,message:"this feature(cancellable ) is not available right now"})
-}
-let userCheck = await userModel.findOne({ _id: userId })
-if (!userCheck) {
-    return res.status(404).send({ status: false, message: "user id doesn't exist" })
-}
-let orderCheck= await orderModel.findOne({_id:orderId})
-if(!orderCheck){
-    return res.status(404).send({ status: false, message: "order is not created " })
-}
-if(orderCheck.userId.toString()!==userCheck._id.toString()){
-    return res.status(404).send({ status: false, message: `order is not for ${userId}, you cannot order it  ` })
-}
+const updateOrder = async function (req, res) {
+    try {
+        let userId = req.params.userId.trim()
+        let orderId = req.body.orderId.trim()
+        let statusbody = req.body.status.trim()
+        if (!isValidObjectId(orderId)) {
+            return res.status(400).send({ status: false, message: `${orderId} not a object id` })
+        }
+        if (req.body.cancellable) {
+            return res.status(400).send({ status: false, message: "this feature(cancellable ) is not available right now" })
+        }
+        let userCheck = await userModel.findOne({ _id: userId })
+        if (!userCheck) {
+            return res.status(404).send({ status: false, message: "user id doesn't exist" })
+        }
+        let orderCheck = await orderModel.findOne({ _id: orderId })
+        if (!orderCheck) {
+            return res.status(404).send({ status: false, message: "order is not created " })
+        }
+        if (orderCheck.userId.toString() !== userCheck._id.toString()) {
+            return res.status(404).send({ status: false, message: `order is not for ${userId}, you cannot order it  ` })
+        }
 
-if(orderCheck.cancellable==false){
-    if(statusbody=="canceled"){
-        return res.status(400).send({ status: false, message: `you cannot canceled this order ` })
+        if (orderCheck.cancellable == false) {
+            if (statusbody == "canceled") {
+                return res.status(400).send({ status: false, message: `you cannot canceled this order ` })
+            }
+            if (statusbody != "completed") {
+                return res.status(400).send({ status: false, message: `this order can only be completed` })
+            }
+        }
+        else if (orderCheck.status == "completed") {
+            //
+            if (statusbody == "pending") {
+                return res.status(400).send({ status: false, message: "this can only be completed !!cannot make it pending" })
+            }
+            if (statusbody == "canceled") {
+                return res.status(400).send({ status: false, message: "this can only be completed !!cannot make it canceled" })
+            }
+        } else if (orderCheck.status == "canceled") {
+            if (statusbody != "canceled") {
+                return res.status(400).send({ status: false, message: "this has canceled please create a oreder" })
+            }
+        }
+        else {
+            let sts = ["completed", "canceled"]
+            if (sts.includes(statusbody) == false) {
+                return res.status(400).send({ status: false, message: "this can only be completed or canceled" })
+            }
+        }
+
+        orderCheck.status = statusbody
+        if (req.body.isDeleted == Boolean) {
+            orderCheck.isDeleted = req.body.isDeleted
+            if (req.body.isDeleted == true) {
+                orderCheck.deletedAt = new Date.now()
+            }
+
+        }
+        let updateOrder = await orderModel.findByIdAndUpdate({ _id: orderId }, orderCheck, { new: true })
+        updateOrder = { ...updateOrder.toObject() }
+        updateOrder.items.map(x => delete x._id)
+        res.status(201).send({ status: true, message: "Success", data: updateOrder })
     }
-    if(statusbody!="completed"){
-        return res.status(400).send({ status: false, message: `this order can only be completed` })
+    catch (error) {
+        res.status(500).send({ status: false, message: error.message })
+        console.log(error)
     }
-}
-else if(orderCheck.status=="completed"){
-    //
-    if(statusbody=="pending"){
-        return res.status(400).send({status:false,message:"this can only be completed !!cannot make it pending"})
-    }
-    if(statusbody=="canceled"){
-        return res.status(400).send({status:false,message:"this can only be completed !!cannot make it canceled"})
-    }
-}else if(orderCheck.status=="canceled"){
-    if(statusbody!="canceled"){
-        return res.status(400).send({status:false,message:"this has canceled please create a oreder"})
-    }
-}
-else{
-let sts = [ "completed", "canceled"]
-if(sts.includes(statusbody)==false){
-   return res.status(400).send({status:false,message:"this can only be completed or canceled"})
-}}
-
-orderCheck.status=statusbody
-if(req.body.isDeleted== Boolean){
-    orderCheck.isDeleted=req.body.isDeleted
-    if(req.body.isDeleted==true){
-        orderCheck.deletedAt=new Date.now()
-    }
-   
-}
-let updateOrder= await orderModel.findByIdAndUpdate({_id:orderId},orderCheck,{new:true})
-updateOrder = { ...updateOrder.toObject()}
-updateOrder.items.map(x => delete x._id)
-res.status(201).send({status:true,message:"Success",data:updateOrder})
-}
-catch (error) {
-    res.status(500).send({ status: false, message: error.message })
-    console.log(error)
-}
 
 }
 
@@ -184,4 +185,4 @@ catch (error) {
 
 
 
-module.exports={createOrder,updateOrder}
+module.exports = { createOrder, updateOrder }

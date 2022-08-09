@@ -5,35 +5,42 @@ const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
+        trim:true
     },
     items: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
-            required: true
+            required: true,
+            trim:true
         },
         quantity: {
             type: Number,
             required: true,
-            min: 1
+            min: 1,
+            trim:true
         }
     }],
     totalPrice: {
         type: Number,
-        required: true
+        required: true,
+        trim:true
     },
     totalItems: {
         type: Number,
-        required: true
+        required: true,
+        trim:true
     },
     totalQuantity: {
         type: Number,
-        required: true
+        required: true,
+        trim:true
     },
     cancellable: {
         type: Boolean,
-        default: true
+        default: true,
+        trim:true
     },
     status: {
         type: String,
